@@ -1,0 +1,9 @@
+Component,Initial (%),3000 cycles (%),6000 cycles (%)
+Fan_Efficiency,-0.18,-1.5,-2.85
+Fan_Flow,-0.26,-2.04,-3.65
+LPC_Efficiency,-0.62,-1.46,-2.61
+LPC_Flow,-1.01,-2.08,-4.0
+HPT_Efficiency,-0.48,-2.63,-3.81
+HPT_Flow,0.08,1.76,2.57
+LPT_Efficiency,-0.1,-0.54,-1.08
+LPT_Flow,0.08,0.26,0.42

@@ -1,0 +1,13 @@
+{
+  "algo": "sac",
+  "timesteps": 500000,
+  "mission": "mixed",
+  "seed": 42,
+  "mean_reward": 190.55730026816542,
+  "std_reward": 49.9381555518543,
+  "min_reward": 66.30735504128735,
+  "max_reward": 273.1101232077868,
+  "mean_violations": 2.36,
+  "safety_rate": 0.9882,
+  "checkpoint": "checkpoints\\control\\sac_mixed\\sac_final"
+}

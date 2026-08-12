@@ -1,0 +1,4 @@
+Objetivo AETP no cubierto,Razón
++30% alcance vs F135 [3],"El alcance requiere simulación de misión completa integrando perfil de vuelo, consumo y peso; el corpus contiene puntos estacionarios individuales sin trayectoria temporal."
++20-40% aceleración [3],La aceleración es una métrica transitoria (dNf/dt del rotor); T-MATS en este trabajo resuelve puntos cuasi-estacionarios sin simulación dinámica de transitorios.
+Duplicación gestión térmica [3],"La capacidad térmica AETP proviene del tercer flujo como heat sink estructural; el modelo captura el control del tercer flujo (bpr_ts) pero no su función térmica activa, que requeriría acoplamiento con un modelo de intercambiador."

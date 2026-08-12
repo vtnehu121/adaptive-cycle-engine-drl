@@ -1,0 +1,58 @@
+# Dependencias del TFG "Control Multiobjetivo de Motores de Ciclo Adaptativo de 
+# Tercer Flujo mediante Arquitectura Híbrida PINN–DRL"
+#
+# Las versiones marcadas con == son las del entorno con el que se generaron los
+# checkpoints y los resultados reportados en la memoria (Anexo E,
+# reproducibilidad): fijarlas garantiza que los pesos guardados se recarguen y
+# reproduzcan las mismas cifras. El resto usa >= por no influir en los
+# resultados numéricos.
+#
+# Instalación:  pip install -r requirements.txtç
+
+# El proyecto se entrena y evalúa íntegramente en CPU (equipo de referencia:
+# Intel Core i7-12650H, sin GPU dedicada). La build por defecto de torch que se
+# instala aquí es la correcta y no requiere ningún paso adicional.
+# Opcionalmente, quien disponga de una GPU NVIDIA puede acelerar el
+# entrenamiento reinstalando torch desde el índice CUDA de PyTorch; no hay que
+# modificar código, la selección de dispositivo (device='auto') es automática:
+#   pip install torch==2.12.1 --index-url https://download.pytorch.org/whl/cu121
+
+# --- Científicas ---
+numpy==2.2.6
+pandas>=2.0.0
+
+# --- Machine Learning ---
+scikit-learn==1.7.2
+
+# --- Deep Learning: PINN (Sección 4), RNN (Sección 4.4), DRL (Secciones 5-6) ---
+torch==2.12.1
+stable-baselines3==2.9.0
+gymnasium==1.3.0
+
+# --- Visualización ---
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# --- Interfaz MATLAB ---
+# La versión debe corresponder con la release de MATLAB instalada (R2026a).
+matlabengine>=26.1
+
+# --- Seguimiento de experimentos ---
+# TensorBoard es el backend de logging de los entrenamientos DRL
+# (tensorboard_log en train_drl.py y train_bc_drl.py).
+tensorboard>=2.20.0
+
+# --- Utilidades ---
+# tqdm y rich son requeridos por progress_bar=True en model.learn() de SB3.
+tqdm>=4.66.0
+rich>=13.0.0
+
+# --- Testing ---
+pytest>=7.4.0
+pytest-cov>=4.1.0
+
+# --- Opcional: notebooks ---
+# Los análisis de notebooks/ son scripts Python con celdas '# %%' y se ejecutan
+# sin Jupyter. Descomentar solo para abrirlos como cuadernos interactivos.
+# jupyter>=1.0.0
+# ipython>=8.14.0

@@ -1,0 +1,134 @@
+{
+  "SAC": {
+    "mean_reward": 209.59404259805754,
+    "std_reward": 46.23455916742345,
+    "violations": 20,
+    "safety_rate": 0.6,
+    "phase_metrics": {
+      "takeoff": {
+        "mean_thrust": 9888.004412982431,
+        "mean_sfc": 1.3594962343642238,
+        "mean_reward": 0.6684704577544751
+      },
+      "climb": {
+        "mean_thrust": 7911.7531629402065,
+        "mean_sfc": 1.2219663080128347,
+        "mean_reward": 1.1826798235011933
+      },
+      "cruise": {
+        "mean_thrust": 12623.18537804359,
+        "mean_sfc": 0.5390625116280228,
+        "mean_reward": 1.4414003858281197
+      },
+      "combat": {
+        "mean_thrust": 70942.70271438752,
+        "mean_sfc": 0.48885910015747996,
+        "mean_reward": 0.49530797349076344
+      },
+      "descent": {
+        "mean_thrust": 14758.509466974609,
+        "mean_sfc": 0.5306405972213308,
+        "mean_reward": 1.4649542019745383
+      }
+    }
+  },
+  "TD3": {
+    "mean_reward": 205.41026218731184,
+    "std_reward": 40.50234204232419,
+    "violations": 22,
+    "safety_rate": 0.56,
+    "phase_metrics": {
+      "takeoff": {
+        "mean_thrust": 8783.934857264514,
+        "mean_sfc": 1.5162976771169365,
+        "mean_reward": 0.70735709027962
+      },
+      "climb": {
+        "mean_thrust": 6868.308496775195,
+        "mean_sfc": 1.258199769453662,
+        "mean_reward": 1.1344159636641349
+      },
+      "cruise": {
+        "mean_thrust": 9997.374110803927,
+        "mean_sfc": 0.5512838702552598,
+        "mean_reward": 1.3816410934879386
+      },
+      "combat": {
+        "mean_thrust": 73521.7623818035,
+        "mean_sfc": 0.47973186616198166,
+        "mean_reward": 0.3935255947483337
+      },
+      "descent": {
+        "mean_thrust": 11625.295291063263,
+        "mean_sfc": 0.48285740474880945,
+        "mean_reward": 1.3520003930998765
+      }
+    }
+  },
+  "TD3+BC": {
+    "mean_reward": 249.9413111851178,
+    "std_reward": 18.946209275929213,
+    "violations": 8,
+    "safety_rate": 0.84,
+    "phase_metrics": {
+      "takeoff": {
+        "mean_thrust": 15845.456472319998,
+        "mean_sfc": 0.7950657767690582,
+        "mean_reward": 1.0956054454663775
+      },
+      "climb": {
+        "mean_thrust": 14549.590170054465,
+        "mean_sfc": 0.7100283344261452,
+        "mean_reward": 1.3066386749498133
+      },
+      "cruise": {
+        "mean_thrust": 12908.66005774245,
+        "mean_sfc": 0.5198146888654526,
+        "mean_reward": 1.5062778022925134
+      },
+      "combat": {
+        "mean_thrust": 72944.7319222781,
+        "mean_sfc": 0.4831208490392345,
+        "mean_reward": 1.0552785057899818
+      },
+      "descent": {
+        "mean_thrust": 12269.678588734934,
+        "mean_sfc": 0.4989817252590494,
+        "mean_reward": 1.3856287352454488
+      }
+    }
+  },
+  "FADEC": {
+    "mean_reward": -1947.2786461082644,
+    "std_reward": 1533.5740065822406,
+    "violations": 44,
+    "safety_rate": 0.12,
+    "phase_metrics": {
+      "takeoff": {
+        "mean_thrust": 13946.926917025006,
+        "mean_sfc": 0.9425179369334845,
+        "mean_reward": 0.6814540405541151
+      },
+      "climb": {
+        "mean_thrust": 12066.082990610845,
+        "mean_sfc": 0.8676426262488363,
+        "mean_reward": 1.2368088940506476
+      },
+      "cruise": {
+        "mean_thrust": 10897.05065867734,
+        "mean_sfc": 0.6399230919625043,
+        "mean_reward": 1.3963991020466826
+      },
+      "combat": {
+        "mean_thrust": 125329.26887839484,
+        "mean_sfc": 0.23052703207332775,
+        "mean_reward": -49.446806396639765
+      },
+      "descent": {
+        "mean_thrust": 14487.81564062044,
+        "mean_sfc": 0.5340927795610857,
+        "mean_reward": 1.4429584055991325
+      }
+    }
+  }
+}

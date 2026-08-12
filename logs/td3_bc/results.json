@@ -1,0 +1,8 @@
+{
+  "mean_reward": 254.2047343525602,
+  "std_reward": 11.545068156074612,
+  "min_reward": 230.0711745145384,
+  "max_reward": 275.93342339440255,
+  "mean_violations": 0.0,
+  "safety_rate": 1.0
+}

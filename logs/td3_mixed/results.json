@@ -1,0 +1,13 @@
+{
+  "algo": "td3",
+  "timesteps": 500000,
+  "mission": "mixed",
+  "seed": 42,
+  "mean_reward": -39.935760243376706,
+  "std_reward": 237.88462222043677,
+  "min_reward": -890.2424039867772,
+  "max_reward": 268.368736288539,
+  "mean_violations": 40.4,
+  "safety_rate": 0.798,
+  "checkpoint": "checkpoints\\control\\td3_mixed\\td3_final"
+}

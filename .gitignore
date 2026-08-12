@@ -1,0 +1,59 @@
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Entorno virtual 
+venv/
+env/
+.venv/
+
+# IDE / Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Testing y cobertura (regenerables)
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# MATLAB / Simulink (auto-save y caches)
+# NOTA: los .slx y .m del proyecto SÍ se versionan
+*.asv
+*.autosave
+slprj/
+*.slxc
+*.mexa64
+*.mexw64
+*.mexmaci64
+.simulink/
+
+# Archivos temporales T-MATS
+*.bin
+*.tmp
+
+# Variables de entorno 
+.env
+.env.local
+.env.*.local
+*.secret
+
+# Mantener estructura de carpetas vacías
+!**/.gitkeep
