@@ -1,0 +1,122 @@
+{
+  "analytical": {
+    "engine": "Analítico simplificado",
+    "n_episodes": 20,
+    "max_steps": 200,
+    "base_seed": 42,
+    "mean_reward": 288.8340495877574,
+    "std_reward": 1.8190022346739187,
+    "T4_mean": 1872.46113664696,
+    "T4_max": 2839.1877910077355,
+    "unsafe_steps": 0,
+    "total_steps": 4000,
+    "safety_rate": 1.0,
+    "phase_metrics": {
+      "takeoff": {
+        "n_steps": 446,
+        "mean_thrust": 69736.50976438503,
+        "mean_sfc": 0.7368381171726205,
+        "mean_T4": 2798.084710389872,
+        "max_T4": 2839.1877910077355,
+        "mean_reward": 1.4314559893622325,
+        "unsafe_steps": 0
+      },
+      "climb": {
+        "n_steps": 871,
+        "mean_thrust": 58349.03610856628,
+        "mean_sfc": 0.6779871481142172,
+        "mean_T4": 2132.1274676055687,
+        "max_T4": 2187.9020252520527,
+        "mean_reward": 1.4116689828528226,
+        "unsafe_steps": 0
+      },
+      "cruise": {
+        "n_steps": 848,
+        "mean_thrust": 42425.22687975013,
+        "mean_sfc": 0.536378403196252,
+        "mean_T4": 1593.9772065419045,
+        "max_T4": 1726.3437507468357,
+        "mean_reward": 1.466518156004465,
+        "unsafe_steps": 0
+      },
+      "combat": {
+        "n_steps": 798,
+        "mean_thrust": 72174.15068347896,
+        "mean_sfc": 0.7660898082017477,
+        "mean_T4": 2531.8728193179945,
+        "max_T4": 2558.1600000000003,
+        "mean_reward": 1.4195426073534898,
+        "unsafe_steps": 0
+      },
+      "descent": {
+        "n_steps": 1037,
+        "mean_thrust": 21099.031918784793,
+        "mean_sfc": 0.5329709575635436,
+        "mean_T4": 976.5559889163097,
+        "max_T4": 1059.1450119954945,
+        "mean_reward": 1.4776138278446607,
+        "unsafe_steps": 0
+      }
+    }
+  },
+  "pinn": {
+    "engine": "BraytonPINN 224 x 8",
+    "n_episodes": 20,
+    "max_steps": 200,
+    "base_seed": 42,
+    "mean_reward": -1757.6973465995138,
+    "std_reward": 1555.2474041131245,
+    "T4_mean": 2881.869269165039,
+    "T4_max": 3630.65185546875,
+    "unsafe_steps": 787,
+    "total_steps": 4000,
+    "safety_rate": 0.80325,
+    "phase_metrics": {
+      "takeoff": {
+        "n_steps": 446,
+        "mean_thrust": 13947.870699621637,
+        "mean_sfc": 0.9423812526223906,
+        "mean_T4": 3159.5218150049045,
+        "max_T4": 3167.775634765625,
+        "mean_reward": 0.6815029376619877,
+        "unsafe_steps": 0
+      },
+      "climb": {
+        "n_steps": 871,
+        "mean_thrust": 12104.433148634831,
+        "mean_sfc": 0.8647152732215163,
+        "mean_T4": 2907.1288521522497,
+        "max_T4": 2918.228271484375,
+        "mean_reward": 1.2374847617010738,
+        "unsafe_steps": 0
+      },
+      "cruise": {
+        "n_steps": 848,
+        "mean_thrust": 10907.884060841687,
+        "mean_sfc": 0.6403067067687241,
+        "mean_T4": 2749.5406816590507,
+        "max_T4": 2766.68701171875,
+        "mean_reward": 1.3961594731723566,
+        "unsafe_steps": 0
+      },
+      "combat": {
+        "n_steps": 798,
+        "mean_thrust": 124935.04371769266,
+        "mean_sfc": 0.2316089022092353,
+        "mean_T4": 3615.7238650214404,
+        "max_T4": 3630.65185546875,
+        "mean_reward": -49.14350754961397,
+        "unsafe_steps": 787
+      },
+      "descent": {
+        "n_steps": 1037,
+        "mean_thrust": 14484.325377064248,
+        "mean_sfc": 0.5344610224292041,
+        "mean_T4": 2284.7280372317987,
+        "max_T4": 2300.28515625,
+        "mean_reward": 1.443422682461557,
+        "unsafe_steps": 0
+      }
+    }
+  }
+}

@@ -199,43 +199,43 @@
   },
   "sensitivity": {
     "Nominal": {
-      "reward_mean": 197.76821303966307,
-      "reward_std": 35.452006514522225,
-      "thrust_mean": 20331.376514648437,
-      "sfc_mean": 0.8388758437037469,
-      "safety_rate": 0.9960000000000001,
+      "reward_mean": 231.55582432920784,
+      "reward_std": 26.71427489218085,
+      "thrust_mean": 18877.852975097656,
+      "sfc_mean": 0.803619684934616,
+      "safety_rate": 0.999,
       "n_episodes": 10
     },
     "Thrust heavy": {
-      "reward_mean": 183.7437200917145,
-      "reward_std": 42.00437019790192,
-      "thrust_mean": 20936.64035253906,
-      "sfc_mean": 0.9238124961480498,
-      "safety_rate": 0.9955,
+      "reward_mean": 225.53810167112914,
+      "reward_std": 23.691627627946115,
+      "thrust_mean": 18877.852975097656,
+      "sfc_mean": 0.803619684934616,
+      "safety_rate": 0.999,
       "n_episodes": 10
     },
     "SFC heavy": {
-      "reward_mean": 224.85231459155625,
-      "reward_std": 43.4006877927234,
-      "thrust_mean": 20825.114153808594,
-      "sfc_mean": 0.8750523717924953,
-      "safety_rate": 0.9974999999999999,
+      "reward_mean": 249.53662782819302,
+      "reward_std": 27.02685610428151,
+      "thrust_mean": 18877.852975097656,
+      "sfc_mean": 0.803619684934616,
+      "safety_rate": 0.999,
       "n_episodes": 10
     },
     "Safety heavy": {
-      "reward_mean": 145.813634851664,
-      "reward_std": 46.020232441455065,
-      "thrust_mean": 21191.55615966797,
-      "sfc_mean": 0.9325444307103752,
-      "safety_rate": 0.9960000000000001,
+      "reward_mean": 199.84725418284654,
+      "reward_std": 30.52295704025466,
+      "thrust_mean": 18877.852975097656,
+      "sfc_mean": 0.803619684934616,
+      "safety_rate": 0.999,
       "n_episodes": 10
     },
     "Balanced": {
-      "reward_mean": 215.7420639459768,
-      "reward_std": 45.680099260469774,
-      "thrust_mean": 20468.339215820313,
-      "sfc_mean": 0.921189514428377,
-      "safety_rate": 0.998,
+      "reward_mean": 230.01593205158673,
+      "reward_std": 23.241167031911026,
+      "thrust_mean": 18877.852975097656,
+      "sfc_mean": 0.803619684934616,
+      "safety_rate": 0.999,
       "n_episodes": 10
     }
   },
