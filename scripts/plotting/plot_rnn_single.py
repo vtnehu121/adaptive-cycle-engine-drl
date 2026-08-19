@@ -1,8 +1,9 @@
 """
 Última Fecha de Modificación: 08/Aug/2026
 Descripción plot_rnn_single.py: Script que genera las figuras de análisis en
-profundidad de una única arquitectura del monitor de salud. Complementa a `plot_rnn_comparison.py`: aquel compara las tres RNN
-entre sí, y este examina el comportamiento temporal de una sola. Sobre el motor
+profundidad de una única arquitectura del monitor de salud. Complementa a
+plot_rnn_comparison.py: aquel compara las tres RNN entre sí, y este examina
+el comportamiento temporal de una sola. Sobre el motor
 más largo del conjunto de validación dibuja la predicción de vida remanente con
 sus bandas de incertidumbre bayesiana obtenidas por MC-Dropout (Gal & Ghahramani,
 2016) y el seguimiento del vector de degradación componente a componente. El
@@ -342,7 +343,11 @@ def main() -> None:
     parser.add_argument('--rnn', choices=['lstm', 'gru'], default='gru')
     parser.add_argument('--hidden', type=int, default=64)
     parser.add_argument('--layers', type=int, default=2)
-    parser.add_argument('--seq-len', type=int, default=50)
+    # La ventana debe ser la misma con la que se entrenó el checkpoint
+    # (train_rnn.py --seq-len, 30 ciclos): la red se evalúa así en el mismo
+    # régimen temporal que vio durante el ajuste, y las figuras son
+    # directamente comparables con las métricas de plot_rnn_comparison.py.
+    parser.add_argument('--seq-len', type=int, default=30)
     parser.add_argument('--subset', default='FD001')
     parser.add_argument('--checkpoint', type=Path, default=None)
     args = parser.parse_args()

@@ -312,7 +312,7 @@ def fig24_ablation_study(results: dict, output_path: Path) -> None:
                   '$P_2$', '$P_{30}$', '$farB$', '$w_f$']
 
     configs = ['PINN_completo', 'Sin_Constraint_Layers', 'Sin_PDEs']
-    config_labels = ['PINN completo\n(7 PDEs + 3 CLs)',
+    config_labels = ['PINN completo\n(6 PDEs + 3 CLs)',
                      'Sin Constraint\nLayers',
                      'Sin PDEs\n(red pura)']
     colors = ['#2A9D8F', '#E9C46A', '#E63946']

@@ -114,7 +114,8 @@ El problema se formula como **CMDP** (proceso de decisión de Markov con restric
 - **Espacio de acción**: 4 continuos normalizados en [−1, 1] → VFGV [−20°, +20°], VGV-T [−15°, +15°], postcombustión [0, 1], sangrado [0,01, 0,10].
 - **Espacio de observación**: 19 variables normalizadas (10 de estado termodinámico, 4 de posición de actuadores, 3 de condición de vuelo, fase codificada y health index).
 - **Recompensa multiobjetivo con pesos dependientes de la fase.** El compromiso cambia por completo a lo largo de la misión: en combate manda el empuje (w = 0,45), en crucero el consumo (w = 0,40).
-- **Safe-RL**: barrera logarítmica sobre T₄ que empieza a penalizar en la zona de advertencia (3 000 °R), mucho antes del límite duro (3 200 °R). `SafetyLayer` aplica esa misma barrera superior a **T₄, Nf y Nc**, y castiga el empuje negativo; el ∞ teórico de la barrera se sustituye por una penalización finita (`PENALTY_HARD = 10.0`, más −50 al detectar violación) para que un único paso inseguro no invalide el episodio entero durante el aprendizaje. Los **márgenes de bombeo** entran aparte, como penalización lineal sobre el *proxy* `sm_fan`/`sm_hpc` dentro de la recompensa de `ACEEnv`, no como barrera logarítmica: el proxy no es lo bastante preciso para justificar una barrera diferenciable.
+- **Safe-RL**: la capa que realmente actúa durante el entrenamiento vive en `ACEEnv._compute_reward()`. Es una **barrera logarítmica sobre T₄** que empieza a penalizar en la zona de advertencia (3 000 °R), mucho antes del límite duro (3 200 °R), y que al cruzarlo sustituye el ∞ teórico por una penalización finita (−10, más una penalización proporcional al exceso) para que un único paso inseguro no invalide el episodio entero. Los **márgenes de bombeo** entran aparte, como penalización lineal sobre el *proxy* `sm_fan`/`sm_hpc`, no como barrera logarítmica: el proxy no es lo bastante preciso para justificar una barrera diferenciable. La comprobación de seguridad por paso (`_check_safety`) sí evalúa las **cinco** restricciones — T₄, Nf, Nc, `SmFan` y `SmHPC` — y es la que alimenta el contador de violaciones.
+  > `src/agents/safe_rl.py` (`SafetyLayer`, `ActionFilter`) implementa una variante más completa —barrera sobre T₄, Nf y Nc, y limitación de la velocidad de actuación—, pero **no está conectada al bucle de entrenamiento**: ningún módulo la importa. Se conserva como formulación de referencia y base para la extensión con proyección de acción.
 - El episodio **nunca termina** por violación, solo se trunca al agotar los pasos: cortarlo daría al agente el incentivo perverso de provocar una violación para escapar de un estado de baja recompensa. Cada paso seguro suma además un *survival bonus* de +1.
 - **Agentes comparados**: SAC, TD3, y un pipeline híbrido **TD3+BC** en tres fases — el FADEC genera 40 000 demostraciones, se clona su comportamiento en el actor por regresión MSE, y se hace *fine-tuning* por refuerzo con el replay buffer pre-poblado.
 
@@ -252,7 +253,8 @@ adaptive-cycle-engine-drl/
 │   ├── evaluation/
 │   │   ├── eval_pinn.py               # MAPE por variable y latencia
 │   │   ├── eval_pde_residuals.py      # Consistencia física fuera de train
-│   │   └── eval_rnn_compare.py        # Comparativa LSTM-128 / LSTM-64 / GRU-64
+│   │   ├── eval_rnn_compare.py        # Comparativa LSTM-128 / LSTM-64 / GRU-64
+│   │   └── eval_fidelity.py           # FADEC: analítico vs PINN + RESULTADOS_FIDELIDAD.json
 │   └── plotting/
 │       ├── plot_pinn_evaluation.py    # fig28 – fig30
 │       ├── plot_rnn_comparison.py     # fig15 – fig18
@@ -596,14 +598,23 @@ Ejecuta 50 episodios deterministas por controlador (SAC, TD3, TD3+BC, FADEC — 
 
 > Este script **no fija semilla** deliberadamente: con una semilla concreta el baseline FADEC caía siempre en las mismas misiones desfavorables y exageraba la ventaja del DRL. Las cifras varían ligeramente entre ejecuciones; el orden entre controladores es estable.
 
-#### Paso 6 — Validación crítica: ablación, OOD, sensibilidad y latencia (fig24–fig27)
+#### Paso 6 — Fidelidad del modelo del motor
+
+```bash
+python scripts/evaluation/eval_fidelity.py
+```
+Somete al mismo FADEC a dos motores —el modelo analítico simplificado interno de `ACEEnv` y el `BraytonPINN`— sobre 20 episodios de 200 pasos del perfil `mixed`, y escribe `results/section_results/RESULTADOS_FIDELIDAD.json`. Sostiene §8.5 y la Sección 6.5 de la memoria.
+
+> Este script **sí fija semilla**, al contrario que el paso 5: lo que compara son dos modelos del motor, no dos controladores, así que ambos deben ver la misma secuencia de misiones para que la diferencia sea atribuible a la fidelidad y no al muestreo de fases.
+
+#### Paso 7 — Validación crítica: ablación, OOD, sensibilidad y latencia (fig24–fig27)
 
 ```bash
 python scripts/plotting/plot_section6.py
 ```
 Escribe `results/section_results/RESULTADOS_SECCION_6.json`. Cada uno de los cuatro análisis se omite con un aviso si le falta algún checkpoint, sin abortar el resto.
 
-#### Paso 7 — Análisis del corpus (fig01–fig14)
+#### Paso 8 — Análisis del corpus (fig01–fig14)
 
 ```bash
 python notebooks/corpus_analysis.py
@@ -611,7 +622,6 @@ python notebooks/cmapss_degradation_analysis.py
 python notebooks/aetp_validation.py
 ```
 Son scripts Python normales con celdas `# %%`; también pueden abrirse como cuadernos en VS Code o Jupyter.
-
 ---
 
 ### 7.2 Ruta completa: reentrenar todo desde cero
@@ -627,7 +637,7 @@ python src/pipeline.py --seed 7           # otra semilla (se propaga a envelope 
 python src/pipeline.py --skip-matlab      # reutiliza el corpus existente
 ```
 
-Las cinco etapas son: muestreo del envelope → simulación T-MATS → preprocesado de C-MAPSS → inyección de degradación → validación físico-estadística (9 comprobaciones). El script termina con código de salida 1 si alguna de las comprobaciones físicas falla, de forma que pueda encadenarse en integración continua.
+Las cinco etapas son: muestreo del envelope → simulación T-MATS → preprocesado de C-MAPSS → inyección de degradación → validación físico-estadística (14 comprobaciones). El script termina con código de salida 1 si alguna de las comprobaciones físicas falla, de forma que pueda encadenarse en integración continua.
 
 | Argumento | Por defecto | Descripción |
 |---|---|---|
@@ -649,15 +659,15 @@ run('setup_ACE_params.m')  % define la estructura ACE.* de parámetros
 #### Paso 2 — Entrenar el gemelo digital PINN
 
 ```bash
-python src/training/train_pinn.py --epochs 1200 --patience 200
+python src/training/train_pinn.py 
 ```
 
-Los valores por defecto de arquitectura y learning rate **ya son los del checkpoint activo** (224 × 8, `lr` 1e-3); solo hay que subir el presupuesto de épocas y la paciencia. Mejor época del checkpoint: 1145.
+**Todos los valores por defecto son los del checkpoint activo** (224 × 8, `lr` 1e-3, 1 200 épocas, paciencia 200): una ejecución sin argumentos reproduce el modelo entregado. Mejor época del checkpoint: 1145.
 
 | Argumento | Por defecto | Descripción |
 |---|---|---|
-| `--epochs` | 600 | Máximo de épocas |
-| `--patience` | 80 | Paciencia del early stopping |
+| `--epochs` | 1200 | Máximo de épocas (reproduce el checkpoint activo) |
+| `--patience` | 200 | Paciencia del early stopping (reproduce el checkpoint activo) |
 | `--hidden` | 224 | Dimensión oculta de los bloques residuales (reproduce el checkpoint activo) |
 | `--layers` | 8 | Número de bloques residuales (reproduce el checkpoint activo) |
 | `--lr` | 1e-3 | Learning rate inicial de AdamW (reproduce el checkpoint activo) |
@@ -669,22 +679,23 @@ Los valores por defecto de arquitectura y learning rate **ya son los del checkpo
 #### Paso 3 — Entrenar las variantes ablacionadas del PINN
 
 ```bash
-python src/training/train_pinn_ablation.py --epochs 1200 --patience 200
+python src/training/train_pinn_ablation.py 
 python src/training/train_pinn_ablation.py --only no_cl        # solo sin constraint layers
 python src/training/train_pinn_ablation.py --only no_physics   # solo sin pérdida física
 ```
 
-Mismos valores por defecto de arquitectura que el modelo completo (224 × 8, `lr` 1e-3). Genera `pinn_no_cl.pt` y `pinn_no_physics.pt` en `checkpoints/digital_twin/`.
+Mismos valores por defecto que el modelo completo (224 × 8, `lr` 1e-3, 1 200 épocas, paciencia 200), de modo que las tres variantes comparten presupuesto de entrenamiento y la ablación es comparable. Genera `pinn_no_cl.pt` y `pinn_no_physics.pt` en `checkpoints/digital_twin/`.
 
 #### Paso 4 — Entrenar el monitor de salud
 
 ```bash
-python src/training/train_rnn.py --rnn gru  --hidden 64  --epochs 100   # modelo elegido
-python src/training/train_rnn.py --rnn lstm --hidden 64  --epochs 100
-python src/training/train_rnn.py --rnn lstm --hidden 128 --epochs 100
+python src/training/train_rnn.py                                # GRU-64: el modelo adoptado
+python src/training/train_rnn.py --rnn lstm --hidden 64          # variante descartada
+python src/training/train_rnn.py --rnn lstm --hidden 128         # variante descartada
 ```
 
-Argumentos: `--rnn {lstm,gru}` (def. `lstm`), `--hidden` (def. 128), `--layers` (def. 2), `--seq-len` (def. 50), `--subset {FD001…FD004}` (def. FD001), `--epochs` (def. 100), `--patience` (def. 20), `--alpha` (def. 0,3), `--checkpoint`.
+Argumentos: `--rnn {lstm,gru}` (def. `gru`), `--hidden` (def. 64), `--layers` (def. 2), `--seq-len` (def. 30), `--subset {FD001…FD004}` (def. FD001), `--epochs` (def. 100), `--patience` (def. 20), `--alpha` (def. 0,3), `--checkpoint`. **Los valores por defecto son los de la GRU-64 adoptada**; las dos LSTM de la comparativa exigen pasar `--rnn` y `--hidden` de forma explícita.
+
 
 Si no se indica `--checkpoint`, el nombre se construye solo a partir de la arquitectura: `checkpoints/health_monitoring/rnn_{lstm|gru}_{hidden}.pt`, que es exactamente lo que buscan los scripts de figuras.
 
@@ -732,7 +743,7 @@ pytest --cov=src          # con informe de cobertura
 pytest unit_test/test_flight_envelope.py -v
 ```
 
-La suite son 14 tests repartidos en tres archivos: `test_cmapss_loader.py` (5), `test_flight_envelope.py` (4) y `test_tmats_interface.py` (5). Estos últimos se saltan automáticamente si el MATLAB Engine no está instalado, y dos de ellos —marcados como `slow`, unos dos minutos entre ambos— son tests de regresión de fallos silenciosos corregidos durante la auditoría del modelo Simulink: el desacoplamiento del splitter del tercer flujo respecto a `bpr_ts`, y la activación del *customer bleed* del HPC. Antes de esas correcciones, dos de las cinco variables de control no tenían ningún efecto sobre el ciclo termodinámico y las simulaciones terminaban sin error.
+La suite son 14 tests repartidos en tres archivos: `test_cmapss_loader.py` (5), `test_flight_envelope.py` (4) y `test_tmats_interface.py` (5). Estos últimos se saltan automáticamente si el MATLAB Engine no está instalado. Dos de ellos —marcados como `slow`, unos dos minutos entre ambos— son tests de regresión que verifican que las dos variables de control más acopladas del modelo Simulink actúan efectivamente sobre el ciclo: que el splitter del tercer flujo responde a `bpr_ts`, y que el *customer bleed* del HPC está activo. Son comprobaciones de efecto, no de convergencia: una simulación puede terminar sin error y con una consigna sin efecto alguno.
 
 ### 7.5 Resolución de problemas frecuentes
 
@@ -744,7 +755,7 @@ La suite son 14 tests repartidos en tres archivos: `test_cmapss_loader.py` (5), 
 | `matlab.engine` no se importa | El MATLAB Engine no está instalado, o su versión no corresponde con la release de MATLAB. Solo afecta a la regeneración del corpus. |
 | `T-MATS no encontrado en …/T-MATS-master/Trunk` | T-MATS debe estar en la carpeta **hermana** del repositorio y llamarse exactamente `T-MATS-master`. |
 | `torch.cuda.is_available()` devuelve `False` | **Es el comportamiento esperado.** El proyecto se ejecuta en CPU y todos los resultados se han generado así; no hay que hacer nada. Solo si tienes una GPU NVIDIA y quieres acelerar el entrenamiento, reinstala torch desde el índice `cu121` (paso 5 de la instalación). |
-| El entrenamiento va lento | Es normal en CPU, sobre todo el PINN a 1 200 épocas. Usa los checkpoints incluidos y la [ruta rápida](#71-ruta-rápida-reproducir-los-resultados-sin-reentrenar-nada), o reduce `--epochs` para una prueba. La inferencia, que es lo que importa para el control, es de milisegundos. |
+| El entrenamiento va lento | Es normal en CPU, sobre todo el PINN, que por defecto corre 1 200 épocas. Usa los checkpoints incluidos y la [ruta rápida](#71-ruta-rápida-reproducir-los-resultados-sin-reentrenar-nada), o reduce `--epochs` para una prueba. La inferencia, que es lo que importa para el control, es de milisegundos. |
 
 ---
 
@@ -767,7 +778,7 @@ Todos los datos de esta sección proceden de `results/`: los JSON de `results/se
 | Rango de T₄ | 1 686 – 3 727 °R (media 2 948) |
 | Semilla | 42 |
 
-**Comportamiento adaptativo verificado** (`results/notebooks/regime_statistics.csv` y `aetp_qualitative_validation.csv`): el corpus reproduce la reconfiguración característica de un ciclo adaptativo, el ratio de empuje combate/crucero es de **5,85×**, el diferencial de SFC entre ambos regímenes es del **−41,6%** con una amplitud operativa de Nf del **50,7%**, y el BPR total varía entre 0,04 y 0,25 en fuerte coherencia con `bpr_ts` (correlación r = 0,982), confirmando el control activo del tercer flujo.
+**Comportamiento adaptativo verificado** (`results/notebooks/regime_statistics.csv` y `aetp_qualitative_validation.csv`): el corpus reproduce la reconfiguración característica de un ciclo adaptativo, el ratio de empuje combate/crucero es de **5,85×**, el diferencial de SFC entre ambos regímenes es del **−41,6%** con una amplitud operativa de Nf del **63,6%**, y el BPR total varía entre 0,04 y 0,25 en fuerte coherencia con `bpr_ts` (correlación r = 0,982), confirmando el control activo del tercer flujo.
 
 > **Matiz sobre el 5,85×.** Ese ratio queda algo por encima del valor típico militar (~3–4×) porque los edge cases supersónicos a baja altitud (Mach > 1,7) llevan a T-MATS fuera de su ventana de calibración e inflan el empuje medio de combate. La reconfiguración cualitativa es válida; la magnitud absoluta no es directamente comparable con AETP.
 
@@ -853,15 +864,17 @@ Casos extremos: en ralentí a TRA = 10% (fuera del rango de entrenamiento, 30–
 
 ### 8.4 Health Monitoring (`fig15` – `fig18`, `fig31` – `fig32`)
 
-Protocolo: 80 motores de entrenamiento y 20 de validación de C-MAPSS FD001 (3 711 secuencias), sin fuga de datos entre motores. Pérdida `L = L_RUL + 0,3·L_deg`, MC-Dropout con N = 50.
+Protocolo: 80 motores de entrenamiento y 20 de validación de C-MAPSS FD001 (3 711 secuencias), sin fuga de datos entre motores. Pérdida `L = L_RUL + 0,3·L_deg`, MC-Dropout con N = 50 y **la misma tasa de dropout que en entrenamiento (p = 0,2)**, condición que exige la aproximación bayesiana de Gal y Ghahramani (2016).
 
 | Modelo | Parámetros | RUL RMSE | RUL MAE | Deg. RMSE | Cobertura IC 95% |
 |---|---|---|---|---|---|
-| LSTM-128 | 299 909 | 15,15 | 11,39 | 0,4395 | 69,0% |
-| LSTM-64 | 76 229 | 14,47 | 11,00 | 0,4450 | 85,5% |
-| **GRU-64 (elegido)** | **59 589** | **13,94** | **10,98** | 0,4398 | **88,4%** |
+| LSTM-128 | 299 909 | 15,15 | 11,39 | 0,4395 | 56,3% |
+| LSTM-64 | 76 229 | 14,47 | 11,00 | 0,4450 | 73,6% |
+| **GRU-64 (elegido)** | **59 589** | **13,94** | **10,98** | 0,4398 | **77,6%** |
 
-**GRU-64 supera a LSTM-128 con 5× menos parámetros** y ofrece la calibración del intervalo de confianza más próxima al 95% nominal (88,4%). LSTM-64 alcanza 85,5%, dentro del rango aceptable pero más alejada del nominal; LSTM-128 queda muy por debajo (69,0%), lo que indica exceso de confianza propio de un modelo sobreparametrizado para el problema (los intervalos son demasiado estrechos y no cubren la incertidumbre real).
+**GRU-64 supera a LSTM-128 con 5× menos parámetros** y ofrece la calibración del intervalo de confianza más próxima al 95% nominal (77,6%). LSTM-64 alcanza 73,6%; LSTM-128 queda muy por debajo (56,3%), lo que indica exceso de confianza propio de un modelo sobreparametrizado para el problema (los intervalos son demasiado estrechos y no cubren la incertidumbre real). Las tres infracubren respecto al nominal, comportamiento habitual de MC-Dropout; lo que discrimina entre arquitecturas es la magnitud de esa infracobertura, y ahí la ventaja de la GRU-64 sobre la LSTM-128 es de 21,3 puntos.
+
+> Las coberturas se miden con MC-Dropout aplicando la misma tasa con la que se entrenaron los tres checkpoints, `dropout=0.2`: la aproximación bayesiana de Gal y Ghahramani (2016) solo es válida bajo esa condición. RMSE, MAE y error de degradación se calculan aparte con `model.eval()`, con el dropout desactivado.
 
 Estas cifras son las de `plot_rnn_comparison.py`, que evalúa los tres modelos sobre un **`val_loader` único compartido**; es la comparativa oficial. `eval_rnn_compare.py` da coberturas ligeramente distintas por usar un cargador por modelo (§7.1, paso 2).
 
@@ -892,7 +905,7 @@ Evaluación sobre 50 episodios por controlador, perfil de misión `mixed`, polí
 | Fase | SAC | TD3 | TD3+BC | FADEC |
 |---|---|---|---|---|
 | Takeoff | 1,360 | 1,518 | **0,795** | 0,942 |
-| Cruise | 0,539 | 0,551 | **0,519** | 0,640 |
+| Cruise | 0,539 | 0,551 | **0,520** | 0,640 |
 | Combat | 0,489 | 0,480 | 0,483 | 0,231* |
 
 \* El FADEC obtiene el mejor SFC nominal en combate, pero lo hace operando de forma insegura — véase abajo.
@@ -910,19 +923,28 @@ Análisis específico sobre 20 episodios en régimen de combate (4 000 pasos):
 | Violaciones | **3 980 / 4 000** | **0 / 4 000** |
 | Reward medio por episodio | −9 967,33 | **241,02** |
 
-El FADEC maximiza empuje ignorando el límite de turbina (3 200 °R): opera 420 °R por encima del máximo admisible durante el 99,5% del tiempo. TD3+BC renuncia al 42% del empuje y opera dentro de la envolvente, con más del doble de margen de bombeo. El dato es coherente con el corpus: las 637 muestras de régimen de combate tienen una T₄ media de 3 552 °R (rango 3 340 – 3 727), es decir, un combate con postcombustión máxima está físicamente por encima del límite y evitarlo exige renunciar a empuje.
+El FADEC maximiza empuje ignorando el límite de turbina (3 200 °R): opera 420 °R por encima del máximo admisible durante el 99,5% del tiempo. TD3+BC renuncia al 42% del empuje y opera dentro de la envolvente, con más del doble de margen de bombeo. El dato es coherente con el corpus: las 637 muestras de combate supersónico —las que cumplen Mach ≥ 1,3 y TRA ≥ 90%, criterio del clasificador `classify_regime`— tienen una T₄ media de 3 552 °R y **ninguna baja de 3 340 °R**, es decir, un combate con postcombustión máxima está físicamente por encima del límite y evitarlo exige renunciar a empuje. Tomando en cambio el estrato de combate completo tal como lo etiquetó el muestreador (`flight_conditions_5000.csv`), son 1 250 muestras con T₄ media de 3 429 °R y rango 2 887 – 3 727; esa es la definición que emplean las tablas de la memoria.
 
 #### Hallazgo clave: la fidelidad del modelo determina la conclusión
 
-El mismo FADEC, evaluado contra tres modelos del motor:
+El mismo FADEC —misma tabla de consulta, misma semilla de ruido de actuación— evaluado contra dos modelos del motor, sobre 20 episodios de 200 pasos del perfil `mixed`:
 
-| Modelo del motor | Reward medio del FADEC | Seguridad |
-|---|---|---|
-| Modelo simplificado (analítico) | **+288,34** | 100% |
-| PINN histórico 128×6 | −2 548,99 | 62,1% |
-| PINN definitivo 224×8 | −2 364,38 | 74,5% |
+```bash
+python scripts/evaluation/eval_fidelity.py
+```
 
-Contra un modelo simplificado, el FADEC parece un controlador excelente. La conclusión se invierte por completo al evaluarlo contra un gemelo digital fiel. **Este resultado justifica por sí solo la existencia del módulo PINN**: sin él, todo el estudio comparativo habría concluido lo contrario. El modelo simplificado es el fallback analítico interno de `ACEEnv`, el que se usa al instanciar el entorno con `pinn_model=None`.
+| Modelo del motor | Reward medio del FADEC | Seguridad (por paso) | T₄ media | Pasos inseguros |
+|---|---|---|---|---|
+| Modelo simplificado (analítico) | **+288,83** | 100% | 1 872 °R | 0 / 4 000 |
+| PINN definitivo 224×8 | **−1 757,70** | 80,3% | 2 882 °R | 787 / 4 000 |
+
+Contra un modelo simplificado, el FADEC parece un controlador excelente. La conclusión se invierte por completo al evaluarlo contra un gemelo digital fiel. **Este resultado justifica por sí solo la existencia del módulo PINN**: sin él, todo el estudio comparativo habría concluido lo contrario. La causa está en la temperatura de turbina: el modelo simplificado predice una T₄ media de 1 872 °R, muy lejos del límite de 3 200 °R, mientras que el PINN la sitúa en 2 882 °R y alcanza el límite en los tramos de combate, que es donde el FADEC ordena postcombustión máxima. El modelo simplificado es el fallback analítico interno de `ACEEnv`, el que se usa al instanciar el entorno con `pinn_model=None`.
+
+El desglose por fase que escribe el script localiza el fenómeno: los **787 pasos inseguros se producen íntegramente en combate** —787 de los 798 pasos que esa fase aporta al total—, y ninguna de las otras cuatro registra uno solo. En combate el modelo analítico predice una T₄ media de 2 532 °R y el PINN la sitúa en 3 616 °R, por encima del límite. El modelo simplificado no es optimista de forma general: no reproduce el único fenómeno que hace peligroso al baseline.
+
+> A diferencia de `plot_drl_section5.py`, este experimento **sí fija las semillas** (entorno `42 – 61`, ruido de actuación del FADEC con `42`), porque aquí la comparación es entre dos modelos del motor y ambos deben afrontar exactamente la misma secuencia de misiones. Es reproducible paso a paso: dos ejecuciones dan cifras idénticas. Escribe `results/section_results/RESULTADOS_FIDELIDAD.json`.
+
+Este resultado es el que documenta la Sección 6.5 de la memoria.
 
 ### 8.6 Análisis de sensibilidad de la recompensa (`fig25`)
 
@@ -930,13 +952,13 @@ El agente **TD3 tabula rasa** (`checkpoints/control/td3_mixed/best_model.zip`) e
 
 | Configuración | Reward | σ | Empuje (lbf) | SFC | Seguridad |
 |---|---|---|---|---|---|
-| SFC-heavy | **224,85** | 43,40 | 20 825 | 0,875 | 99,8% |
-| Balanced | 215,74 | 45,68 | 20 468 | 0,921 | 99,8% |
-| Nominal | 197,77 | 35,45 | 20 331 | 0,839 | 99,6% |
-| Thrust-heavy | 183,74 | 42,00 | 20 937 | 0,924 | 99,6% |
-| Safety-heavy | 145,81 | 46,02 | 21 192 | 0,933 | 99,6% |
+| SFC-heavy | **249,54** | 27,03 | 18 878 | 0,804 | 99,9% |
+| Nominal | 231,56 | 26,71 | 18 878 | 0,804 | 99,9% |
+| Balanced | 230,02 | 23,24 | 18 878 | 0,804 | 99,9% |
+| Thrust-heavy | 225,54 | 23,69 | 18 878 | 0,804 | 99,9% |
+| Safety-heavy | 199,85 | 30,52 | 18 878 | 0,804 | 99,9% |
 
-La tasa de seguridad —aquí medida **por paso**, no por episodio— se mantiene **por encima del 99,5% en las cinco configuraciones**: el comportamiento seguro aprendido es robusto y no un artefacto de una ponderación concreta. La política no se reentrena en ningún caso; lo que se mide es la robustez del comportamiento ya aprendido, no su capacidad de readaptarse.
+**Las columnas de empuje, SFC y seguridad son idénticas en las cinco filas, y eso es el resultado.** La política es determinista, los pesos de la recompensa no forman parte del vector de observación y las cinco configuraciones afrontan las mismas misiones por llevar la semilla fijada por episodio: el agente ejecuta exactamente la misma trayectoria en los cinco casos y los pesos solo alteran la puntuación que se le asigna a posteriori. El comportamiento seguro aprendido no es un artefacto de una ponderación concreta; es independiente de ella por construcción. La política no se reentrena en ningún caso; lo que se mide es la robustez del comportamiento ya aprendido, no su capacidad de readaptarse, que exigiría un experimento distinto.
 
 ### 8.7 Índice de figuras
 
@@ -1033,7 +1055,7 @@ La tasa de seguridad —aquí medida **por paso**, no por episodio— se mantien
 
 ### Muestreo estadístico
 
-- **McKay, M. D., Beckman, R. J., Conover, W. J.** (1979). *A Comparison of Three Methods for Selecting Values of Input Variables in the Analysis of Output from a Computer Code*. **Technometrics**, 21(2), 239–245. — Muestreo estratificado (LHS) del envelope de vuelo por hiperrectángulos de misión.
+- **McKay, M. D., Beckman, R. J., Conover, W. J.** (1979). *A Comparison of Three Methods for Selecting Values of Input Variables in the Analysis of Output from a Computer Code*. **Technometrics**, 21(2), 239–245. — Compara tres esquemas de muestreo: aleatorio simple, **estratificado** e hipercubo latino. Este trabajo emplea el **estratificado**, con un hiperrectángulo por fase de misión y muestreo uniforme independiente dentro de cada uno; **no** utiliza hipercubo latino (véase §3).
 
 ### Técnicas implementadas
 

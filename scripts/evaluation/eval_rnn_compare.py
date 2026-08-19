@@ -100,7 +100,7 @@ def build_model(rnn_type: str, hidden: int) -> HealthMonitoringRNN:
         hidden_dim=hidden,
         n_layers=2,
         rnn_type=rnn_type,
-        dropout=0.3,
+        dropout=0.2,
         bidirectional=False,
     )
 

@@ -447,10 +447,10 @@ def fig20_drl_vs_fadec(results: dict, output_path: Path) -> None:
     bars_r = axes[0].bar(drl_controllers, reward_gains,
                           color=ctrl_colors, alpha=0.85)
     axes[0].axhline(y=0, color=COLORS['FADEC'], linestyle='--',
-                    linewidth=2, label='FADEC baseline')
+                    linewidth=2, label='FADEC baseline', zorder=3)
     axes[0].set_ylabel('Mejora [%]')
     axes[0].set_title(f'Mejora en reward (baseline: {fadec_reward:.0f})')
-    axes[0].legend()
+    axes[0].legend(loc='upper left', framealpha=0.95)
     axes[0].grid(axis='y', alpha=0.3)
     for bar, val in zip(bars_r, reward_gains):
         offset = 1 if val >= 0 else -3
@@ -469,11 +469,11 @@ def fig20_drl_vs_fadec(results: dict, output_path: Path) -> None:
     bars_s = axes[1].bar(drl_controllers, safety_gains,
                           color=ctrl_colors, alpha=0.85)
     axes[1].axhline(y=0, color=COLORS['FADEC'], linestyle='--',
-                    linewidth=2, label='FADEC baseline')
+                    linewidth=2, label='FADEC baseline', zorder=3)
     axes[1].set_ylabel('Mejora relativa [%]')
     axes[1].set_title(f'Mejora en seguridad '
                       f'(FADEC: {fadec_safety * 100:.0f}%)')
-    axes[1].legend()
+    axes[1].legend(loc='upper left', framealpha=0.95)
     axes[1].grid(axis='y', alpha=0.3)
     for bar, val in zip(bars_s, safety_gains):
         offset = 2 if val >= 0 else -5
@@ -493,11 +493,11 @@ def fig20_drl_vs_fadec(results: dict, output_path: Path) -> None:
     bars_sfc = axes[2].bar(drl_controllers, sfc_reductions,
                             color=ctrl_colors, alpha=0.85)
     axes[2].axhline(y=0, color=COLORS['FADEC'], linestyle='--',
-                    linewidth=2, label='FADEC baseline')
+                    linewidth=2, label='FADEC baseline', zorder=3)
     axes[2].set_ylabel('Reduccion de SFC [%]')
     axes[2].set_title(f'Eficiencia en crucero '
                       f'(FADEC SFC: {fadec_sfc_cruise:.3f})')
-    axes[2].legend()
+    axes[2].legend(loc='upper left', framealpha=0.95)
     axes[2].grid(axis='y', alpha=0.3)
     for bar, val in zip(bars_sfc, sfc_reductions):
         offset = 0.2 if val >= 0 else -0.5
@@ -505,6 +505,14 @@ def fig20_drl_vs_fadec(results: dict, output_path: Path) -> None:
                      bar.get_height() + offset,
                      f'{val:+.1f}%', ha='center',
                      fontweight='bold', fontsize=12)
+        
+    # La línea de referencia del FADEC está en y = 0 y, sin margen inferior,
+    # quedaría superpuesta al eje y sería indistinguible de él. Se reserva
+    # además holgura superior para que la leyenda no tape las etiquetas de
+    # valor, que se dibujan justo encima de cada barra.
+    for ax, valores in zip(axes, (reward_gains, safety_gains, sfc_reductions)):
+        alto = max(valores) if valores else 1.0
+        ax.set_ylim(bottom=-alto * 0.05, top=alto * 1.26)
 
     plt.tight_layout()
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
@@ -661,8 +669,9 @@ def fig23_actuator_actions(controllers: dict, pinn,
 
     Un panel por actuador, con las acciones desnormalizadas a sus unidades físicas.
     Es la figura que explica el porqué de las demás: muestra qué hace realmente cada
-    política con las geometrías variables, el afterburner y el sangrado, y permite    contrastar los escalones rígidos del scheduling del FADEC con la modulación
-    continua que aprenden los agentes.
+    política con las geometrías variables, el afterburner y el sangrado, y
+    permite contrastar los escalones rígidos del scheduling del FADEC con la
+    modulación continua que aprenden los agentes.
 
     param controllers: Diccionario {nombre: controlador} a representar.
     param pinn: Gemelo digital con el que construir el entorno.

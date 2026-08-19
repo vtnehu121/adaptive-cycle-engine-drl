@@ -137,14 +137,16 @@ def evaluate_checkpoint(cfg: dict, val_loader) -> dict:
     # - 15 sensores: del subset de FD001 que quedan tras eliminar los
     #   sensores constantes según Saxena et al. (2008 PHM).
     # - 2 capas RNN: profundidad estándar para series temporales cortas.
-    # - dropout=0.3: valor usado durante el entrenamiento; MC-Dropout
-    #   reactiva estas dropouts en inferencia para obtener incertidumbre.
+    # - dropout=0.2: la tasa con la que se entrenaron los tres checkpoints
+    #   (HealthMonitoringRNN.__init__). MC-Dropout reactiva esas capas en
+    #   inferencia y solo aproxima la posterior bayesiana de Gal y Ghahramani
+    #   (2016) si la tasa de inferencia coincide con la de entrenamiento.
     model = HealthMonitoringRNN(
         n_sensors=15,
         hidden_dim=cfg['hidden'],
         n_layers=2,
         rnn_type=cfg['rnn_type'],
-        dropout=0.3,
+        dropout=0.2,
         bidirectional=False,
     )
     model.load_state_dict(ckpt, strict=False)
