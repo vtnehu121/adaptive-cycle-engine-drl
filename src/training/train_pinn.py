@@ -1,5 +1,5 @@
 """
-Última Fecha de Modificación: 08/Aug/2026
+Última Fecha de Modificación: 19/Aug/2026
 Descripción train_pinn.py: Interfaz de línea de comandos para entrenar el gemelo
 digital PINN sobre el corpus sintético del ACE. Carga el corpus indicado, delega
 en ACEDigitalTwin la preparación de DataLoaders (con la normalización aprendida
@@ -24,7 +24,7 @@ guardado y no requiere re-entrenar.
 
 Uso:
     python src/training/train_pinn.py
-    python src/training/train_pinn.py --epochs 600 --patience 80
+    python src/training/train_pinn.py
     python src/training/train_pinn.py --dataset data/synthetic/ace_dataset_5000.csv
 """
 
@@ -63,9 +63,9 @@ def main() -> None:
     """
     parser = argparse.ArgumentParser(
         description="Entrenamiento del Gemelo Digital PINN del ACE")
-    parser.add_argument('--epochs', type=int, default=600,
+    parser.add_argument('--epochs', type=int, default=1200,
                         help="Número máximo de epochs")
-    parser.add_argument('--patience', type=int, default=80,
+    parser.add_argument('--patience', type=int, default=200,
                         help="Paciencia para early stopping")
     parser.add_argument('--hidden', type=int, default=224,
                         help="Dimensión oculta de los bloques residuales "

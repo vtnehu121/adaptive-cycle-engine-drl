@@ -1,5 +1,5 @@
 """
-Última Fecha de Modificación: 08/Aug/2026
+Última Fecha de Modificación: 19/Aug/2026
 Descripción pipeline.py: Orquestador de la generación del corpus sintético del
 motor ACE. Encadena las cinco etapas que van del muestreo
 del envelope de vuelo a la validación físico-estadística del dataset, pasando
@@ -198,14 +198,16 @@ def step_4_degradation(dataset: pd.DataFrame, seed: int) -> pd.DataFrame:
 def step_5_validation(dataset: pd.DataFrame) -> bool:
     """Valida la integridad físico-estadística del corpus generado.
 
-    Comprueba nueve invariantes del ciclo Brayton adaptativo:
+    Comprueba catorce invariantes del ciclo Brayton adaptativo:
         - Ausencia de NaN e infinitos en todas las columnas numéricas.
         - Consistencia termodinámica en las estaciones del ciclo.
         - Compresión y expansión con signo termodinámico correcto.
         - Empuje y velocidades de eje dentro de rangos operacionales.
         - Correlación positiva entre TRA y empuje (r > 0.3).
-        - Empuje inferior al límite de la clase C-MAPSS (90 000 lbf).
+        - Correlación entre la consigna del tercer flujo y el BPR real (r > 0.5).
+        - Empuje inferior al techo de plausibilidad del solver (500 000 lbf).
         - Consumo específico dentro del rango físico plausible.
+
 
     Es imprescindible como puerta de calidad del corpus: un solver que converge no
     garantiza un resultado físicamente coherente, y entrenar el gemelo digital sobre

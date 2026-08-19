@@ -2,12 +2,12 @@
 # Tercer Flujo mediante Arquitectura Híbrida PINN–DRL"
 #
 # Las versiones marcadas con == son las del entorno con el que se generaron los
-# checkpoints y los resultados reportados en la memoria (Anexo E,
+# checkpoints y los resultados reportados en la memoria (Anexo D, protocolo de
 # reproducibilidad): fijarlas garantiza que los pesos guardados se recarguen y
 # reproduzcan las mismas cifras. El resto usa >= por no influir en los
 # resultados numéricos.
 #
-# Instalación:  pip install -r requirements.txtç
+# Instalación:  pip install -r requirements.txt
 
 # El proyecto se entrena y evalúa íntegramente en CPU (equipo de referencia:
 # Intel Core i7-12650H, sin GPU dedicada). La build por defecto de torch que se
@@ -23,6 +23,10 @@ pandas>=2.0.0
 
 # --- Machine Learning ---
 scikit-learn==1.7.2
+# scipy se importa de forma directa en plot_rnn_comparison.py (scipy.stats.norm,
+# para los cuantiles de la curva de calibración); se declara de forma explícita
+# en lugar de depender de que scikit-learn lo arrastre.
+scipy>=1.15.0
 
 # --- Deep Learning: PINN (Sección 4), RNN (Sección 4.4), DRL (Secciones 5-6) ---
 torch==2.12.1

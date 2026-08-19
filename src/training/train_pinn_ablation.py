@@ -1,5 +1,5 @@
 """
-Última Fecha de Modificación: 08/Aug/2026
+Última Fecha de Modificación: 19/Aug/2026
 Descripción train_pinn_ablation.py: Interfaz de línea de comandos que entrena
 las dos variantes ablacionadas del gemelo digital para el estudio de ablation
 del proyecto. Ambas comparten corpus, partición, optimizador y criterio de
@@ -24,7 +24,7 @@ semilla base y la comparación entre ellas sea justa.
 
 Uso:
     python src/training/train_pinn_ablation.py
-    python src/training/train_pinn_ablation.py --epochs 600 --patience 80
+    python src/training/train_pinn_ablation.py
     python src/training/train_pinn_ablation.py --only no_cl
     python src/training/train_pinn_ablation.py --only no_physics
 """
@@ -255,9 +255,9 @@ def main() -> None:
     """
     parser = argparse.ArgumentParser(
         description="Entrena las variantes ablated del PINN")
-    parser.add_argument('--epochs', type=int, default=600,
+    parser.add_argument('--epochs', type=int, default=1200,
                         help="Número máximo de epochs")
-    parser.add_argument('--patience', type=int, default=80,
+    parser.add_argument('--patience', type=int, default=200,
                         help="Paciencia para early stopping")
     parser.add_argument('--hidden', type=int, default=224,
                         help="Dimensión oculta de los bloques residuales "

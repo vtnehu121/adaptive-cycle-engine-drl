@@ -1,5 +1,5 @@
 """
-Última Fecha de Modificación: 08/Aug/2026
+Última Fecha de Modificación: 19/Aug/2026
 Descripción train_drl.py: Interfaz de línea de comandos para entrenar los agentes
 de control del motor ACE. Carga el gemelo digital PINN, construye el entorno
 ACE-v0, instancia SAC o TD3 con los hiperparámetros calibrados del proyecto y
@@ -89,7 +89,11 @@ SAC_HYPERPARAMS = {
     'batch_size':       256,
     'tau':              0.005,
     'gamma':            0.99,
-    'ent_coef':         0.2,       # con target_entropy='auto'
+    # ent_coef declarado como valor numerico: el coeficiente de entropia
+    # queda fijo en 0.2 durante todo el entrenamiento. Stable-Baselines3 solo
+    # ajusta alpha de forma automatica cuando ent_coef='auto', de modo que
+    # target_entropy no interviene con esta configuracion.
+    'ent_coef':         0.2,
     'target_entropy':   'auto',
     'train_freq':       1,
     'gradient_steps':   1,

@@ -1,5 +1,5 @@
 """
-Última Fecha de Modificación: 08/Aug/2026
+Última Fecha de Modificación: 19/Aug/2026
 Descripción train_rnn.py: Interfaz de línea de comandos para entrenar el monitor
 de salud recurrente sobre el dataset NASA C-MAPSS. Construye el HealthMonitor
 (LSTM o GRU con cabezal dual RUL + degradación) con la variante y el tamaño
@@ -21,8 +21,8 @@ MC-Dropout, tracking por componente) con `scripts/plotting/plot_rnn_single.py`.
 
 Uso:
     python src/training/train_rnn.py
-    python src/training/train_rnn.py --rnn gru --hidden 64
-    python src/training/train_rnn.py --rnn lstm --hidden 128 --epochs 150
+    python src/training/train_rnn.py
+    python src/training/train_rnn.py --rnn lstm --hidden 128
 """
 
 import argparse
@@ -72,13 +72,13 @@ def main() -> None:
     """
     parser = argparse.ArgumentParser(
         description="Entrenamiento del módulo Health Monitoring RNN")
-    parser.add_argument('--rnn', choices=['lstm', 'gru'], default='lstm',
+    parser.add_argument('--rnn', choices=['lstm', 'gru'], default='gru',
                         help="Tipo de RNN")
-    parser.add_argument('--hidden', type=int, default=128,
+    parser.add_argument('--hidden', type=int, default=64,
                         help="Dimensión oculta")
     parser.add_argument('--layers', type=int, default=2,
                         help="Número de capas apiladas")
-    parser.add_argument('--seq-len', type=int, default=50,
+    parser.add_argument('--seq-len', type=int, default=30,
                         help="Longitud de las ventanas deslizantes")
     parser.add_argument('--subset', default='FD001',
                         help="Sub-dataset C-MAPSS a usar")
