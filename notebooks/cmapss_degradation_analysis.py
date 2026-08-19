@@ -395,19 +395,59 @@ common_sensors = ['T30', 'P30', 'Nf', 'Nc', 'T50', 'epr']
 common_available = [s for s in common_sensors
                     if s in fd001.columns and s in ace_degraded.columns]
 
+MIN_FRAC = 0.012          # anchura mínima de un soporte, en fracción del panel
+SERIES = [('C-MAPSS FD001', '#457B9D'), ('ACE sintético', '#E63946')]
+
+
+def _fmt_range(x):
+    """Formatea un extremo de rango evitando la notación científica."""
+    return f'{x:,.2f}'.rstrip('0').rstrip('.') if abs(x) < 100 else f'{x:,.0f}'
+
 fig, axes = plt.subplots(2, 3, figsize=(18, 10))
 
 for ax, sensor in zip(axes.flat, common_available):
-    cmapss_vals = fd001[sensor].dropna()
-    ace_vals = ace_degraded[sensor].dropna()
+    data = [fd001[sensor].dropna().values,
+            ace_degraded[sensor].dropna().values]
 
-    ax.hist(cmapss_vals, bins=30, alpha=0.5, color='#457B9D',
-            label='C-MAPSS FD001', density=True, edgecolor='white')
-    ax.hist(ace_vals, bins=30, alpha=0.5, color='#E63946',
-            label='ACE sintético', density=True, edgecolor='white')
+    lo = min(v.min() for v in data)
+    hi = max(v.max() for v in data)
+    pad = 0.05 * (hi - lo) if hi > lo else max(abs(hi), 1.0) * 0.05
+    xlo, xhi = lo - pad, hi + pad
+    span = xhi - xlo
+
+    for vals, (label, color) in zip(data, SERIES):
+        width = vals.max() - vals.min()
+        if width < MIN_FRAC * span:
+            center = 0.5 * (vals.max() + vals.min())
+            ax.bar(center, 1.0, width=MIN_FRAC * span, align='center',
+                   color=color, alpha=0.60, edgecolor='white',
+                   linewidth=0.5, label=label, zorder=3)
+        else:
+            nbins = int(np.clip(width / (0.004 * span), 6, 30))
+            counts, edges = np.histogram(vals, bins=nbins)
+            counts = counts / counts.max()
+            ax.bar(edges[:-1], counts, width=np.diff(edges), align='edge',
+                   color=color, alpha=0.60, edgecolor='white',
+                   linewidth=0.4, label=label, zorder=2)
+
+    ax.text(0.98, 0.97,
+            '\n'.join(f'{label.split()[0]}: '
+                      f'{_fmt_range(v.min())} – {_fmt_range(v.max())}'
+                      for v, (label, _) in zip(data, SERIES)),
+            transform=ax.transAxes, ha='right', va='top',
+            fontsize=9, family='monospace',
+            bbox=dict(boxstyle='round,pad=0.35', fc='white', ec='0.8',
+                      alpha=0.9))
+
+    ax.set_xlim(xlo, xhi)
+    ax.set_ylim(0, 1.30)
     ax.set_xlabel(sensor)
-    ax.set_ylabel('Densidad')
-    ax.legend()
+    ax.set_ylabel('Frecuencia relativa (por dominio)')
+    ax.grid(alpha=0.3)
+
+handles, labels = axes.flat[0].get_legend_handles_labels()
+fig.legend(handles, labels, loc='upper center', ncol=2, frameon=True,
+           bbox_to_anchor=(0.5, 1.02))
 
 plt.tight_layout()
 plt.savefig(FIG_DIR / 'fig11_cmapss_vs_ace.png',

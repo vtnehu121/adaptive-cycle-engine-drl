@@ -108,8 +108,13 @@ def classify_regime(row):
     Aplica reglas sobre altitud, Mach y palanca en un orden deliberado: primero se
     identifica el combate, después el despegue y el descenso, y solo entonces se
     distingue crucero de ascenso, de modo que las condiciones más específicas tengan
-    prioridad. Es necesario porque casi todo el análisis del notebook se agrupa por
-    fase, y el corpus puede haberse generado sin esa columna.
+    prioridad.
+
+    Es solo un plan B: reetiqueta a posteriori y no reproduce el estrato del que
+    salió cada punto. Exige Mach >= 1.3 para llamar 'combat', pero el estrato de
+    combate se muestrea desde Mach 0.8, así que todo el tramo transónico acaba en
+    'climb' y el 14 % de las muestras queda mal asignado. Úsese únicamente cuando
+    no esté disponible la etiqueta del muestreador (flight_conditions_{n}.csv).
 
     param row: Fila del corpus con las columnas altitude, mach y tra.
     return: Nombre de la fase de misión asignada al punto de operación.
@@ -127,10 +132,27 @@ def classify_regime(row):
         return 'cruise'
     else:
         return 'climb'
+    
+def load_regime_labels(corpus: pd.DataFrame) -> pd.Series:
+    """Devuelve la etiqueta de fase de misión de cada punto del corpus.
+
+    Solo si ese fichero no está o no encaja se recurre a classify_regime, 
+    que reetiqueta a posteriori y discrepa del muestreador en torno al 14 % de las muestras.
+
+    param corpus: Corpus ya cargado, usado para comprobar el número de filas.
+    return: Serie de nombres de fase alineada con el índice del corpus.
+    """
+    conditions_path = Path(f'data/synthetic/flight_conditions_{len(corpus)}.csv')
+    if conditions_path.exists():
+        conditions = pd.read_csv(conditions_path)
+        if 'regime' in conditions.columns and len(conditions) == len(corpus):
+            print(f"Régimen tomado de {conditions_path.name} (etiqueta del muestreador).")
+            return pd.Series(conditions['regime'].values, index=corpus.index)
+    print("Régimen estimado con classify_regime (etiqueta del muestreador no disponible).")
+    return corpus.apply(classify_regime, axis=1)
 
 if 'regime' not in df.columns:
-    df['regime'] = df.apply(classify_regime, axis=1)
-    print(f"Régimen calculado. Distribución:")
+    df['regime'] = load_regime_labels(df)
     regime_counts = df['regime'].value_counts()
 
     for regime, count in regime_counts.items():
